@@ -1,0 +1,57 @@
+name: HxItems
+version: '${project.version}'
+main: dev.hxrry.hxitems.HxItems
+api-version: '1.21'
+author: hxrry27
+description: Visual item editor for ValeSMP
+website: https://valesmp.com
+
+permissions:
+  hxitems.*:
+    description: All HxItems permissions
+    children:
+      hxitems.rename: true
+      hxitems.lore: true
+      hxitems.sign: true
+      hxitems.admin: true
+  
+  hxitems.rename:
+    description: Rename items
+    default: true
+  
+  hxitems.lore:
+    description: Edit item lore
+    default: true
+  
+  hxitems.sign:
+    description: Sign items
+    default: true
+  
+  hxitems.admin:
+    description: Admin commands
+    default: op
+
+commands:
+  rename:
+    description: Rename the item you're holding
+    usage: /rename <name>
+    permission: hxitems.rename
+    aliases: [renameitem, itemrename]
+  
+  lore:
+    description: Edit lore on the item you're holding
+    usage: /lore <set|add|remove|clear> [line] [text]
+    permission: hxitems.lore
+    aliases: [itemlore, editlore]
+  
+  sign:
+    description: Sign the item you're holding
+    usage: /sign [message]
+    permission: hxitems.sign
+    aliases: [signitem, itemsign]
+  
+  hxitems:
+    description: HxItems admin commands
+    usage: /hxitems <reload|info>
+    permission: hxitems.admin
+    aliases: [hxi]
