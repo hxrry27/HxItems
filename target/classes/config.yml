@@ -25,7 +25,7 @@ signatures:
   enabled: true
   max-message-length: 100
   show-timestamp: true
-  format: "&7Signed by &f{player}&7: &o{message}"
+  format: "<gray>Signed by <white>{player}<gray>: <italic>{message}"
 
 # Formatting
 formatting:
@@ -46,36 +46,37 @@ formatting:
 
 # Messages
 messages:
-  prefix: "&8[&bHxItems&8] "
+  prefix: "<dark_gray>[<aqua>HxItems<dark_gray>] "
   
   rename:
-    success: "&aRenamed item to: {name}"
-    cleared: "&aItem name cleared"
-    too-long: "&cName too long! Max {max} characters"
-    no-item: "&cYou must be holding an item!"
+    success: "<green>Renamed item to: {name}"
+    cleared: "<green>Item name cleared"
+    too-long: "<red>Name too long! Max {max} characters"
+    no-item: "<red>You must be holding an item!"
   
   lore:
-    set: "&aSet line {line} to: {text}"
-    added: "&aAdded line {line}: {text}"
-    removed: "&aRemoved line {line}"
-    cleared: "&aCleared all lore"
-    invalid-line: "&cInvalid line number! Must be 1-{max}"
-    too-long: "&cLore line too long! Max {max} characters"
-    too-many-lines: "&cToo many lore lines! Max {max} lines"
-    no-item: "&cYou must be holding an item!"
+    set: "<green>Set line {line} to: {text}"
+    added: "<green>Added line {line}: {text}"
+    removed: "<green>Removed line {line}"
+    cleared: "<green>Cleared all lore"
+    invalid-line: "<red>Invalid line number! Must be 1-{max}"
+    too-long: "<red>Lore line too long! Max {max} characters"
+    too-many-lines: "<red>Too many lore lines! Max {max} lines"
+    no-item: "<red>You must be holding an item!"
   
   sign:
-    success: "&aSigned item: {message}"
-    cleared: "&aSignature removed"
-    already-signed: "&cThis item is already signed!"
-    message-too-long: "&cMessage too long! Max {max} characters"
-    no-item: "&cYou must be holding an item!"
-    not-signed: "&cThis item is not signed!"
+    success-blank: "<green>You signed an item!"
+    success-with-message: "<green>You signed with the message: {message}"
+    cleared: "<green>Signature removed"
+    already-signed: "<red>This item is already signed!"
+    message-too-long: "<red>Message too long! Max {max} characters"
+    no-item: "<red>You must be holding an item!"
+    not-signed: "<red>This item is not signed!"
   
   admin:
-    reload: "&aConfiguration reloaded!"
-    info: "&7HxItems v{version} &8| &7Signatures: {count}"
+    reload: "<green>Configuration reloaded!"
+    info: "<gray>HxItems v{version} <dark_gray>| <gray>Signatures: {count}"
   
   error:
-    no-permission: "&cYou don't have permission to do that!"
-    invalid-usage: "&cUsage: {usage}"
+    no-permission: "<red>You don't have permission to do that!"
+    invalid-usage: "<red>Usage: {usage}"

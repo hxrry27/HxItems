@@ -6,19 +6,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.hxrry</groupId>
-    <artifactId>hxitems</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>HxItems</artifactId>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <name>HxItems</name>
-    <description>Visual item editor for ValeSMP</description>
+    <description>Visual item editor for Paper/Purpur</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
-        <paper.version>1.21.1-R0.1-SNAPSHOT</paper.version>
+        <paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>
     </properties>
 
     <repositories>

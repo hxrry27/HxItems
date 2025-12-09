@@ -12,12 +12,15 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,11 +41,14 @@ public class SignCommand {
             commands.register(
                     Commands.literal("sign")
                             .requires(source -> source.getSender().hasPermission("hxitems.sign"))
+                            // /sign clear
+                            .then(Commands.literal("clear")
+                                    .executes(this::executeClear))
                             // /sign <message>
                             .then(Commands.argument("message", StringArgumentType.greedyString())
                                     .executes(this::executeSign))
                             // /sign (no message)
-                            .executes(ctx -> executeSign(ctx, null))
+                            .executes(ctx -> executeSignNoMessage(ctx))
                             .build(),
                     "Sign the item you're holding",
                     java.util.List.of("signitem", "itemsign"));
@@ -51,10 +57,14 @@ public class SignCommand {
 
     private int executeSign(CommandContext<CommandSourceStack> ctx) {
         String message = ctx.getArgument("message", String.class);
-        return executeSign(ctx, message);
+        return executeSignInternal(ctx, message);
     }
 
-    private int executeSign(CommandContext<CommandSourceStack> ctx, String message) {
+    private int executeSignNoMessage(CommandContext<CommandSourceStack> ctx) {
+        return executeSignInternal(ctx, null);
+    }
+
+    private int executeSignInternal(CommandContext<CommandSourceStack> ctx, String message) {
         CommandSender sender = ctx.getSource().getSender();
 
         if (!(sender instanceof Player player)) {
@@ -74,11 +84,6 @@ public class SignCommand {
         if (!plugin.getConfig().getBoolean("signatures.enabled", true)) {
             player.sendMessage(Colours.parse("<red>Item signing is currently disabled!"));
             return 0;
-        }
-
-        // handle clearin
-        if (message != null && (message.equalsIgnoreCase("clear") || message.equalsIgnoreCase("remove"))) {
-            return executeClear(player, item);
         }
 
         // check if already signed
@@ -121,9 +126,16 @@ public class SignCommand {
                 // add signature lore
                 addSignatureLore(item, player.getName(), message);
 
-                // success message yuay
-                String msg = plugin.getConfig().getString("messages.sign.success", "&aSigned item: {message}");
-                msg = msg.replace("{message}", message != null ? message : "");
+                // success message - different for blank vs message
+                String msg;
+                if (message != null && !message.isEmpty()) {
+                    msg = plugin.getConfig().getString("messages.sign.success-with-message",
+                            "&aYou signed with the message: {message}");
+                    msg = msg.replace("{message}", message);
+                } else {
+                    msg = plugin.getConfig().getString("messages.sign.success-blank",
+                            "&aYou signed an item!");
+                }
                 player.sendMessage(Colours.parse(msg));
             } else {
                 player.sendMessage(Colours.parse("<red>Failed to save signature!"));
@@ -133,7 +145,21 @@ public class SignCommand {
         return 1;
     }
 
-    private int executeClear(Player player, ItemStack item) {
+    private int executeClear(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Colours.parse("<red>Only players can use this command!"));
+            return 0;
+        }
+
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (!ItemUtil.isValidItem(item)) {
+            String msg = plugin.getConfig().getString("messages.sign.no-item", "&cYou must be holding an item!");
+            player.sendMessage(Colours.parse(msg));
+            return 0;
+        }
+
         if (!ItemUtil.hasSignature(item, plugin)) {
             String msg = plugin.getConfig().getString("messages.sign.not-signed", "&cThis item is not signed!");
             player.sendMessage(Colours.parse(msg));
@@ -149,7 +175,8 @@ public class SignCommand {
                 // remove signature mark
                 ItemUtil.clearSignature(item, plugin);
 
-                // TODO: Remove signature lore (would need to track which line it is)
+                // remove signature lore
+                removeSignatureLore(item);
 
                 String msg = plugin.getConfig().getString("messages.sign.cleared", "&aSignature removed");
                 player.sendMessage(Colours.parse(msg));
@@ -172,14 +199,36 @@ public class SignCommand {
             format = format.replace(": &o{message}", "");
         }
 
-        boolean stripItalic = false; // Keep italic for signature
-        ItemUtil.addLoreLine(item, "", stripItalic); // Empty line separator
+        boolean stripItalic = false;
+        ItemUtil.addLoreLine(item, "", stripItalic);
         ItemUtil.addLoreLine(item, format, stripItalic);
 
-        // add timestamp if enabled TODO: consider formatting
+        // add timestamp if enabled
         if (plugin.getConfig().getBoolean("signatures.show-timestamp", true)) {
             String timestamp = new java.text.SimpleDateFormat("MMM dd, yyyy").format(new java.util.Date());
             ItemUtil.addLoreLine(item, "&8" + timestamp, stripItalic);
+        }
+    }
+
+    private void removeSignatureLore(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null)
+            return;
+
+        List<Component> lore = meta.lore();
+        if (lore == null || lore.isEmpty())
+            return;
+
+        boolean showTimestamp = plugin.getConfig().getBoolean("signatures.show-timestamp", true);
+        int linesToRemove = showTimestamp ? 3 : 2; // empty line + signature + optional timestamp
+
+        int currentSize = lore.size();
+        if (currentSize >= linesToRemove) {
+            for (int i = 0; i < linesToRemove; i++) {
+                lore.remove(lore.size() - 1);
+            }
+            meta.lore(lore.isEmpty() ? null : lore);
+            item.setItemMeta(meta);
         }
     }
 }

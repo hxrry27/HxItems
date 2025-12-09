@@ -30,9 +30,7 @@ public class ItemUtil {
      * check if item is valid for editing
      */
     public static boolean isValidItem(@Nullable ItemStack item) {
-        return item != null &&
-                item.getType() != Material.AIR &&
-                item.hasItemMeta();
+        return item != null && item.getType() != Material.AIR;
     }
 
     /**
