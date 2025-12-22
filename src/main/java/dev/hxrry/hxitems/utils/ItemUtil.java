@@ -3,6 +3,7 @@ package dev.hxrry.hxitems.utils;
 import dev.hxrry.hxcore.text.Colours;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Material;
@@ -34,37 +35,18 @@ public class ItemUtil {
     }
 
     /**
-     * format text with default prefix (remove italic AND set default white color)
-     */
-    @NotNull
-    public static String formatText(@NotNull String text, boolean stripItalic) {
-        // check if user already specified a color at the start
-        boolean hasColor = text.startsWith("<") || text.startsWith("&");
-
-        StringBuilder formatted = new StringBuilder();
-
-        // always remove italic
-        if (stripItalic && !text.contains("<!italic>")) {
-            formatted.append("<!italic>");
-        }
-
-        // add default white color ONLY if user didn't specify one
-        if (!hasColor) {
-            formatted.append("<white>");
-        }
-
-        formatted.append(text);
-
-        return formatted.toString();
-    }
-
-    /**
      * parse and format text to Component
      */
     @NotNull
     public static Component parseComponent(@NotNull String text, boolean stripItalic) {
-        text = formatText(text, stripItalic);
-        return Colours.parse(text);
+        Component component = Colours.parse(text);
+
+        // Apply italic removal AFTER parsing
+        if (stripItalic) {
+            component = component.decoration(TextDecoration.ITALIC, false);
+        }
+
+        return component;
     }
 
     /**
