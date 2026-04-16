@@ -1,8 +1,0 @@
-dev\hxrry\hxitems\commands\AdminCommand.class
-dev\hxrry\hxitems\models\ItemSignature.class
-dev\hxrry\hxitems\utils\ItemUtil.class
-dev\hxrry\hxitems\commands\RenameCommand.class
-dev\hxrry\hxitems\HxItems.class
-dev\hxrry\hxitems\commands\LoreCommand.class
-dev\hxrry\hxitems\commands\SignCommand.class
-dev\hxrry\hxitems\database\DatabaseManager.class
