@@ -30,6 +30,10 @@ permissions:
   hxitems.admin:
     description: Admin commands
     default: op
+  
+  hxitems.model:
+    description: Apply Custom Model Data
+    default: op
 
 commands:
   rename:
@@ -55,3 +59,7 @@ commands:
     usage: /hxitems <reload|info>
     permission: hxitems.admin
     aliases: [hxi]
+
+  model:
+    description: Apply CustomModelData to the held item
+    usage: /model

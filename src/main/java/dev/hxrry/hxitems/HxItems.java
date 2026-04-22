@@ -6,6 +6,13 @@ import dev.hxrry.hxitems.commands.LoreCommand;
 import dev.hxrry.hxitems.commands.RenameCommand;
 import dev.hxrry.hxitems.commands.SignCommand;
 import dev.hxrry.hxitems.database.DatabaseManager;
+import dev.hxrry.hxitems.utils.ModelDiscovery;
+import dev.hxrry.hxitems.commands.ModelCommand;
+import dev.hxrry.hxitems.utils.ModelTabCompletion;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -16,6 +23,7 @@ public class HxItems extends JavaPlugin {
 
     private HxCore core;
     private DatabaseManager databaseManager;
+    private ModelDiscovery modelDiscovery;
 
     @Override
     public void onEnable() {
@@ -41,11 +49,14 @@ public class HxItems extends JavaPlugin {
             return null;
         });
 
+        initModelSystem();
+
         // Register commands
         new RenameCommand(this).register();
         new LoreCommand(this).register();
         new SignCommand(this).register();
         new AdminCommand(this).register();
+        new ModelCommand(this).register();
 
         getLogger().info("HxItems enabled successfully!");
     }
@@ -65,16 +76,25 @@ public class HxItems extends JavaPlugin {
         getLogger().info("HxItems disabled");
     }
 
-    /**
-     * get the database manager
-     */
+    private void initModelSystem() {
+        String configured = getConfig().getString("model.local-path", "resourcepack");
+        Path configPath = Paths.get(configured);
+        Path packPath = configPath.isAbsolute()
+                ? configPath
+                : getDataFolder().toPath().resolve(configured);
+
+        modelDiscovery = new ModelDiscovery(packPath, getLogger());
+        modelDiscovery.rescan();
+    }
+
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
-    /**
-     * get the HxCore instance
-     */
+    public ModelDiscovery getModelDiscovery() {
+        return modelDiscovery;
+    }
+
     public HxCore getCore() {
         return core;
     }

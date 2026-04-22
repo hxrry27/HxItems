@@ -44,6 +44,10 @@ formatting:
     allowed-ranges:
       - "\uE000-\uF8FF"  # Private use area (custom symbols)
 
+# Model path
+model:
+  local-path: "/resourcepack"
+
 # Messages
 messages:
   prefix: "<dark_gray>[<aqua>HxItems<dark_gray>] "
@@ -72,6 +76,43 @@ messages:
     message-too-long: "<red>Message too long! Max {max} characters"
     no-item: "<red>You must be holding an item!"
     not-signed: "<red>This item is not signed!"
+
+  model:
+    # Generic
+    not-a-player: "<red>Only players can use /model."
+    no-permission: "<red>You don't have permission: <white><perm></white>"
+    no-item: "<red>Hold an item to modify."
+    no-item-inspect: "<red>Hold an item to inspect."
+
+    # /model set
+    set-usage: "<red>Usage: /model set <tag>"
+    set-success: "<green>Set model data: <white><tag>"
+    set-unknown-tag: "<yellow>Warning: tag <white><tag></white> not found in resource pack. Applying anyway."
+    set-item-mismatch: "<yellow>Note: tag <white><tag></white> was defined for <white><expected></white>, not <white><actual></white>."
+
+    # /model clear
+    clear-success: "<green>Cleared model data."
+    clear-none: "<yellow>Item has no custom model data."
+
+    # /model info
+    info-none: "<gray>No custom model data on held item."
+    info-display: |
+      <gold>Custom Model Data:</gold>
+        <gray>strings:</gray> <white><strings></white>
+        <gray>floats:</gray>  <white><floats></white>
+        <gray>flags:</gray>   <white><flags></white>
+        <gray>colors:</gray>  <white><colors></white>
+
+    # /model reload
+    reload-success: "<green>Rescanned pack: <white><count></white> tags loaded."
+
+    # Usage
+    usage: |
+      <gold>Usage:</gold>
+        <yellow>/model set <tag></yellow>  <gray>- apply model to held item</gray>
+        <yellow>/model clear</yellow>      <gray>- remove model from held item</gray>
+        <yellow>/model info</yellow>       <gray>- inspect held item</gray>
+        <yellow>/model reload</yellow>     <gray>- rescan resource pack</gray>
   
   admin:
     reload: "<green>Configuration reloaded!"
