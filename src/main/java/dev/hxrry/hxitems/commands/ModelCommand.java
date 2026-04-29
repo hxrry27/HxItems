@@ -3,11 +3,17 @@ package dev.hxrry.hxitems.commands;
 import dev.hxrry.hxcore.text.Colours;
 import dev.hxrry.hxitems.HxItems;
 import dev.hxrry.hxitems.utils.ModelDiscovery;
-import dev.hxrry.hxitems.utils.ModelTabCompletion;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -15,81 +21,74 @@ import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-public final class ModelCommand implements CommandExecutor {
+public final class ModelCommand {
 
     private final HxItems plugin;
     private final ModelDiscovery discovery;
 
-    public ModelCommand(HxItems plugin) {
+    public ModelCommand(@NotNull HxItems plugin) {
         this.plugin = plugin;
         this.discovery = plugin.getModelDiscovery();
     }
 
+    @SuppressWarnings("null")
     public void register() {
-        PluginCommand command = plugin.getCommand("model");
-        if (command == null) {
-            plugin.getLogger().severe(
-                    "[HxItems] /model command not found in plugin.yml - did you add it?");
-            return;
-        }
-        command.setExecutor(this);
-        command.setTabCompleter(new ModelTabCompletion(discovery));
+        plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            Commands commands = event.registrar();
+
+            commands.register(
+                    Commands.literal("model")
+                            .requires(source -> source.getSender().hasPermission("hxitems.model"))
+                            // /model set <tag>
+                            .then(Commands.literal("set")
+                                    .requires(source -> source.getSender().hasPermission("hxitems.model.set"))
+                                    .then(Commands.argument("tag", StringArgumentType.word())
+                                            .suggests(this::suggestTags)
+                                            .executes(this::executeSet)))
+                            // /model clear
+                            .then(Commands.literal("clear")
+                                    .requires(source -> source.getSender().hasPermission("hxitems.model.clear"))
+                                    .executes(this::executeClear))
+                            // /model info
+                            .then(Commands.literal("info")
+                                    .requires(source -> source.getSender().hasPermission("hxitems.model.info"))
+                                    .executes(this::executeInfo))
+                            // /model reload
+                            .then(Commands.literal("reload")
+                                    .requires(source -> source.getSender().hasPermission("hxitems.model.reload"))
+                                    .executes(this::executeReload))
+                            .executes(ctx -> {
+                                sendUsage(ctx.getSource().getSender());
+                                return 0;
+                            })
+                            .build(),
+                    "Apply Custom Model Data to held items",
+                    java.util.List.of());
+        });
     }
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd,
-            @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(Colours.parse(msg("not-a-player", "&cOnly players can use /model.")));
-            return true;
-        }
-
-        if (args.length == 0) {
-            sendUsage(player);
-            return true;
-        }
-
-        return switch (args[0].toLowerCase()) {
-            case "set" -> handleSet(player, args);
-            case "clear" -> handleClear(player);
-            case "info" -> handleInfo(player);
-            case "reload" -> handleReload(player);
-            default -> {
-                sendUsage(player);
-                yield true;
-            }
-        };
-    }
-
-    private boolean handleSet(Player player, String[] args) {
-        if (!player.hasPermission("hxitems.model.set")) {
-            sendMsg(player, "no-permission",
-                    "&cYou don't have permission to set model data.");
-            return true;
-        }
-        if (args.length < 2) {
-            sendMsg(player, "set-usage", "&cUsage: /model set <tag>");
-            return true;
-        }
+    private int executeSet(CommandContext<CommandSourceStack> ctx) {
+        Player player = getPlayer(ctx);
+        if (player == null)
+            return 0;
 
         ItemStack held = player.getInventory().getItemInMainHand();
         if (held.getType().isAir()) {
             sendMsg(player, "no-item", "&cHold an item to modify.");
-            return true;
+            return 0;
         }
 
-        String tag = args[1];
+        @SuppressWarnings("null")
+        String tag = ctx.getArgument("tag", String.class);
 
-        // warn if the tag isn't known - don't block, admins may want to apply a tag
-        // before the pack actually defines it (pre-release testing etc.)
         if (!discovery.getAllTags().contains(tag)) {
             String raw = msg("set-unknown-tag",
                     "&eWarning: tag &f{tag}&e not found in resource pack. Applying anyway.");
             player.sendMessage(Colours.parse(raw.replace("{tag}", tag)));
         }
 
-        // gentle warning if the tag was defined against a different item
         String expectedItem = discovery.getItemForTag(tag);
         String actualItem = held.getType().getKey().toString();
         if (expectedItem != null && !expectedItem.equals(actualItem)) {
@@ -109,26 +108,24 @@ public final class ModelCommand implements CommandExecutor {
 
         String raw = msg("set-success", "&aSet model data: &f{tag}");
         player.sendMessage(Colours.parse(raw.replace("{tag}", tag)));
-        return true;
+        return 1;
     }
 
-    private boolean handleClear(Player player) {
-        if (!player.hasPermission("hxitems.model.clear")) {
-            sendMsg(player, "no-permission",
-                    "&cYou don't have permission to clear model data.");
-            return true;
-        }
+    private int executeClear(CommandContext<CommandSourceStack> ctx) {
+        Player player = getPlayer(ctx);
+        if (player == null)
+            return 0;
 
         ItemStack held = player.getInventory().getItemInMainHand();
         if (held.getType().isAir()) {
             sendMsg(player, "no-item", "&cHold an item to modify.");
-            return true;
+            return 0;
         }
 
         ItemMeta meta = held.getItemMeta();
         if (!meta.hasCustomModelDataComponent()) {
             sendMsg(player, "clear-none", "&eItem has no custom model data.");
-            return true;
+            return 0;
         }
 
         CustomModelDataComponent component = meta.getCustomModelDataComponent();
@@ -140,26 +137,24 @@ public final class ModelCommand implements CommandExecutor {
         held.setItemMeta(meta);
 
         sendMsg(player, "clear-success", "&aCleared model data.");
-        return true;
+        return 1;
     }
 
-    private boolean handleInfo(Player player) {
-        if (!player.hasPermission("hxitems.model.info")) {
-            sendMsg(player, "no-permission",
-                    "&cYou don't have permission to view model data.");
-            return true;
-        }
+    private int executeInfo(CommandContext<CommandSourceStack> ctx) {
+        Player player = getPlayer(ctx);
+        if (player == null)
+            return 0;
 
         ItemStack held = player.getInventory().getItemInMainHand();
         if (held.getType().isAir()) {
             sendMsg(player, "no-item-inspect", "&cHold an item to inspect.");
-            return true;
+            return 0;
         }
 
         ItemMeta meta = held.getItemMeta();
         if (!meta.hasCustomModelDataComponent()) {
             sendMsg(player, "info-none", "&7No custom model data on held item.");
-            return true;
+            return 0;
         }
 
         CustomModelDataComponent component = meta.getCustomModelDataComponent();
@@ -174,29 +169,45 @@ public final class ModelCommand implements CommandExecutor {
                         .replace("{floats}", component.getFloats().toString())
                         .replace("{flags}", component.getFlags().toString())
                         .replace("{colors}", component.getColors().toString())));
-        return true;
+        return 1;
     }
 
-    private boolean handleReload(Player player) {
-        if (!player.hasPermission("hxitems.model.reload")) {
-            sendMsg(player, "no-permission",
-                    "&cYou don't have permission to reload.");
-            return true;
-        }
+    private int executeReload(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
         int count = discovery.rescan();
         String raw = msg("reload-success", "&aRescanned pack: &f{count}&a tags loaded.");
-        player.sendMessage(Colours.parse(raw.replace("{count}", String.valueOf(count))));
-        return true;
+        sender.sendMessage(Colours.parse(raw.replace("{count}", String.valueOf(count))));
+        return 1;
     }
 
-    private void sendUsage(Player player) {
+    private CompletableFuture<Suggestions> suggestTags(CommandContext<CommandSourceStack> ctx,
+            SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining().toLowerCase();
+        for (String tag : discovery.getAllTags()) {
+            if (tag.toLowerCase().startsWith(remaining)) {
+                builder.suggest(tag);
+            }
+        }
+        return builder.buildFuture();
+    }
+
+    private Player getPlayer(CommandContext<CommandSourceStack> ctx) {
+        CommandSender sender = ctx.getSource().getSender();
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Colours.parse(msg("not-a-player", "&cOnly players can use /model.")));
+            return null;
+        }
+        return player;
+    }
+
+    private void sendUsage(CommandSender sender) {
         String raw = msg("usage",
                 "&6Usage:\n" +
                         "  &e/model set <tag>&r &7- apply model to held item\n" +
                         "  &e/model clear&r &7- remove model from held item\n" +
                         "  &e/model info&r &7- inspect held item\n" +
                         "  &e/model reload&r &7- rescan resource pack");
-        player.sendMessage(Colours.parse(raw));
+        sender.sendMessage(Colours.parse(raw));
     }
 
     private String msg(String key, String fallback) {

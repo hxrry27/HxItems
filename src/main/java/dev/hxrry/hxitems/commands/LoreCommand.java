@@ -2,6 +2,7 @@ package dev.hxrry.hxitems.commands;
 
 import dev.hxrry.hxcore.text.Colours;
 import dev.hxrry.hxitems.HxItems;
+import dev.hxrry.hxitems.tag.TagService; // NEW import
 import dev.hxrry.hxitems.utils.ItemUtil;
 
 import io.papermc.paper.command.brigadier.Commands;
@@ -18,10 +19,6 @@ import org.bukkit.inventory.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
 
-/**
- * edit item lore
- * usage: /lore <set|add|remove|clear> [line] [text]
- */
 public class LoreCommand {
     private final HxItems plugin;
 
@@ -29,6 +26,7 @@ public class LoreCommand {
         this.plugin = plugin;
     }
 
+    @SuppressWarnings("null")
     public void register() {
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
@@ -71,7 +69,9 @@ public class LoreCommand {
         if (!validateItem(player, item))
             return 0;
 
+        @SuppressWarnings("null")
         int line = ctx.getArgument("line", Integer.class);
+        @SuppressWarnings("null")
         String text = ctx.getArgument("text", String.class);
 
         // validate line number
@@ -81,6 +81,10 @@ public class LoreCommand {
                     "&cInvalid line number! Must be 1-{max}");
             msg = msg.replace("{max}", String.valueOf(maxLines));
             player.sendMessage(Colours.parse(msg));
+            return 0;
+        }
+
+        if (rejectIfManaged(player, item, line - 1)) {
             return 0;
         }
 
@@ -125,9 +129,9 @@ public class LoreCommand {
         if (!validateItem(player, item))
             return 0;
 
+        @SuppressWarnings("null")
         String text = ctx.getArgument("text", String.class);
 
-        // Check if we can add more lines
         int maxLines = plugin.getConfig().getInt("lore.max-lines", 20);
         int currentLines = ItemUtil.getLoreLineCount(item);
         if (currentLines >= maxLines) {
@@ -138,7 +142,6 @@ public class LoreCommand {
             return 0;
         }
 
-        // Validate text length
         int maxLength = plugin.getConfig().getInt("lore.max-line-length", 100);
         if (text.length() > maxLength) {
             String msg = plugin.getConfig().getString("messages.lore.too-long",
@@ -148,7 +151,6 @@ public class LoreCommand {
             return 0;
         }
 
-        // Add lore
         boolean stripItalic = plugin.getConfig().getBoolean("lore.strip-italic", true);
         ItemUtil.addLoreLine(item, text, stripItalic);
 
@@ -169,6 +171,7 @@ public class LoreCommand {
         if (!validateItem(player, item))
             return 0;
 
+        @SuppressWarnings("null")
         int line = ctx.getArgument("line", Integer.class);
 
         int currentLines = ItemUtil.getLoreLineCount(item);
@@ -177,6 +180,10 @@ public class LoreCommand {
                     "&cInvalid line number! Must be 1-{max}");
             msg = msg.replace("{max}", String.valueOf(currentLines));
             player.sendMessage(Colours.parse(msg));
+            return 0;
+        }
+
+        if (rejectIfManaged(player, item, line - 1)) {
             return 0;
         }
 
@@ -198,12 +205,32 @@ public class LoreCommand {
         if (!validateItem(player, item))
             return 0;
 
-        ItemUtil.clearLore(item);
-
-        String msg = plugin.getConfig().getString("messages.lore.cleared", "&aCleared all lore");
-        player.sendMessage(Colours.parse(msg));
+        TagService svc = plugin.getTagService();
+        if (svc != null && svc.hasAnyTags(item)) {
+            svc.clearNonTagLore(item);
+            String msg = plugin.getConfig().getString("messages.lore.cleared-kept-tags",
+                    "&aCleared custom lore. Use &e/tag clear&a to remove tags.");
+            player.sendMessage(Colours.parse(msg));
+        } else {
+            ItemUtil.clearLore(item);
+            String msg = plugin.getConfig().getString("messages.lore.cleared", "&aCleared all lore");
+            player.sendMessage(Colours.parse(msg));
+        }
 
         return 1;
+    }
+
+    private boolean rejectIfManaged(@NotNull Player player, @NotNull ItemStack item, int lineIndex0Based) {
+        TagService svc = plugin.getTagService();
+        if (svc == null)
+            return false;
+        if (!svc.isManagedLine(item, lineIndex0Based))
+            return false;
+
+        String msg = plugin.getConfig().getString("messages.lore.tag-locked",
+                "&cThat lore line is part of the item's tag and can't be edited. Use &e/tag remove <name>&c to remove a tag.");
+        player.sendMessage(Colours.parse(msg));
+        return true;
     }
 
     private Player getPlayer(CommandContext<CommandSourceStack> ctx) {
@@ -229,6 +256,6 @@ public class LoreCommand {
         sender.sendMessage(Colours.parse("<white>/lore set <line> <text> <gray>- Set a specific line"));
         sender.sendMessage(Colours.parse("<white>/lore add <text> <gray>- Add line to end"));
         sender.sendMessage(Colours.parse("<white>/lore remove <line> <gray>- Remove a line"));
-        sender.sendMessage(Colours.parse("<white>/lore clear <gray>- Clear all lore"));
+        sender.sendMessage(Colours.parse("<white>/lore clear <gray>- Clear all non-tag lore"));
     }
 }

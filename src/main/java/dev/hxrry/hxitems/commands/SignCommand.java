@@ -34,6 +34,7 @@ public class SignCommand {
         this.plugin = plugin;
     }
 
+    @SuppressWarnings("null")
     public void register() {
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
@@ -56,6 +57,7 @@ public class SignCommand {
     }
 
     private int executeSign(CommandContext<CommandSourceStack> ctx) {
+        @SuppressWarnings("null")
         String message = ctx.getArgument("message", String.class);
         return executeSignInternal(ctx, message);
     }

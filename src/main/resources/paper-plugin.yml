@@ -1,0 +1,7 @@
+name: HxItems
+version: '${project.version}'
+main: dev.hxrry.hxitems.HxItems
+api-version: '1.21'
+author: hxrry27
+description: Visual item editor for Paper/Purpur
+website: https://github.com/hxrry27

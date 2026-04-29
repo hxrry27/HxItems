@@ -59,6 +59,7 @@ public class DatabaseManager {
                 });
     }
 
+    @SuppressWarnings("null")
     public CompletableFuture<ItemSignature> getSignature(UUID itemUUID) {
         String sql = "SELECT * FROM hxitems_signatures WHERE item_uuid = ?";
 

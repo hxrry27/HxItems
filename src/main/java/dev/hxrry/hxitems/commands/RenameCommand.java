@@ -28,6 +28,7 @@ public class RenameCommand {
         this.plugin = plugin;
     }
 
+    @SuppressWarnings("null")
     public void register() {
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
@@ -64,6 +65,7 @@ public class RenameCommand {
         }
 
         // get name argument
+        @SuppressWarnings("null")
         String name = ctx.getArgument("name", String.class);
 
         // check for clear

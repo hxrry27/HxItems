@@ -1,0 +1,96 @@
+# ============================================================================
+#  HxItems — tag configuration
+# ============================================================================
+#
+#  This file defines cosmetic tags that can be applied to items via /tag add.
+#  Edit and run /tag reload to pick up changes without a server restart.
+#
+#  Every tag maps to a private-use Unicode character (U+E000–U+F8FF range).
+#  That character must also exist in your resource pack's font JSON pointed at
+#  by the `font` key below, otherwise players will see a missing-char box.
+# ============================================================================
+
+# The font used for rendering tag glyphs.
+# Must match the font namespace:path registered in your resource pack.
+# (e.g. assets/valesmp/font/tags.json -> "valesmp:tags")
+font: "valesmp:tags"
+
+# ---- Categories ----
+# Order here determines lore line order: first category = top of lore.
+# `exclusive: true` means adding a tag from this category replaces any existing
+# tag of the same category. use for rarities (item can only be ONE tier).
+categories:
+  - name: rarity
+    exclusive: true
+  - name: event
+    exclusive: false
+
+# ---- Tags ----
+# char can be written as "0xE001" (quoted string, recommended — no hidden chars)
+# or as 0xE001 (raw hex, YAML-1.1 parses this as an integer; both work).
+#
+# Tag names (keys) should be lowercase, alphanumeric + underscore.
+# Anything typed in /tag add must match the key exactly.
+tags:
+
+  # ----- Rarity ladder (5 tiers) -----
+
+  common:
+    char: "0xE001"
+    category: rarity
+    displayName: "Common"
+
+  rare:
+    char: "0xE002"
+    category: rarity
+    displayName: "Rare"
+
+  epic:
+    char: "0xE003"
+    category: rarity
+    displayName: "Epic"
+
+  legendary:
+    char: "0xE004"
+    category: rarity
+    displayName: "Legendary"
+
+  prismatic:
+    char: "0xE005"
+    category: rarity
+    displayName: "Prismatic"
+
+  # ----- Event tags -----
+  # convention: events use 0xE100+ so rarity and event codepoints are distinct
+  # visually in yaml. if you retire an event tag, leave it defined here so
+  # existing items keep rendering correctly — only remove once no items use it.
+
+  halloween_2025:
+    char: "0xE100"
+    category: event
+    displayName: "Halloween 2025"
+
+  halloween_2026:
+    char: "0xE101"
+    category: event
+    displayName: "Halloween 2026"
+
+  christmas_2025:
+    char: "0xE110"
+    category: event
+    displayName: "Christmas 2025"
+
+  valentine_2026:
+    char: "0xE120"
+    category: event
+    displayName: "Valentine 2026"
+
+  pride_2026:
+    char: "0xE130"
+    category: event
+    displayName: "Pride 2026"
+
+  anniversary_y1:
+    char: "0xE140"
+    category: event
+    displayName: "1 Year Anniversary"

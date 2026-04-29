@@ -177,6 +177,7 @@ public class ItemUtil {
         NamespacedKey key = new NamespacedKey(plugin, "item_uuid");
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
 
+        @SuppressWarnings("null")
         String uuidString = pdc.get(key, PersistentDataType.STRING);
         if (uuidString != null) {
             return UUID.fromString(uuidString);
@@ -193,6 +194,7 @@ public class ItemUtil {
     /**
      * check if item has signature
      */
+    @SuppressWarnings("null")
     public static boolean hasSignature(@NotNull ItemStack item, @NotNull Plugin plugin) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null)

@@ -45,8 +45,10 @@ formatting:
       - "\uE000-\uF8FF"  # Private use area (custom symbols)
 
 # Model path
+# - relative paths resolve from this plugin's data folder (plugins/HxItems/)
+# - absolute paths are used as-is
 model:
-  local-path: "/resourcepack"
+  local-path: "../../../resourcepack"
 
 # Messages
 messages:
@@ -76,6 +78,16 @@ messages:
     message-too-long: "<red>Message too long! Max {max} characters"
     no-item: "<red>You must be holding an item!"
     not-signed: "<red>This item is not signed!"
+
+  tag:
+    added: "&aAdded tag &e{tag}&a to item."
+    removed: "&aRemoved tag &e{tag}&a from item."
+    not-found: "&cNo tag named &e{tag}&c exists. See &e/tag list&c."
+    not-on-item: "&cItem doesn't have the &e{tag}&c tag."
+    already-present: "&eItem already has the &6{tag}&e tag."
+    cleared: "&aCleared all tags from item."
+    no-item: "&cYou must be holding an item!"
+    reloaded: "&aTag registry reloaded: &e{count}&a tags loaded, &e{touched}&a items updated."
 
   model:
     # Generic

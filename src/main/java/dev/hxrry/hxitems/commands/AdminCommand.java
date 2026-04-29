@@ -13,10 +13,6 @@ import org.bukkit.command.CommandSender;
 
 import org.jetbrains.annotations.NotNull;
 
-/**
- * admin command for HxItems
- * usage: /hxitems <reload|info>
- */
 public class AdminCommand {
     private final HxItems plugin;
 
@@ -24,6 +20,7 @@ public class AdminCommand {
         this.plugin = plugin;
     }
 
+    @SuppressWarnings("null")
     public void register() {
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
@@ -53,7 +50,15 @@ public class AdminCommand {
         try {
             plugin.reloadConfig();
 
-            String msg = plugin.getConfig().getString("messages.admin.reload", "&aConfiguration reloaded!");
+            int touched = 0;
+            if (plugin.getTagRegistry() != null) {
+                plugin.getTagRegistry().load();
+                touched = plugin.getTagService().rebuildAllLoadedItems();
+            }
+
+            String msg = plugin.getConfig().getString("messages.admin.reload",
+                    "&aConfiguration reloaded! ({touched} tagged items updated)");
+            msg = msg.replace("{touched}", String.valueOf(touched));
             sender.sendMessage(Colours.parse(msg));
         } catch (Exception e) {
             sender.sendMessage(Colours.parse("<red>Failed to reload configuration!"));
@@ -63,6 +68,7 @@ public class AdminCommand {
         return 1;
     }
 
+    @SuppressWarnings("deprecation")
     private int executeInfo(CommandContext<CommandSourceStack> ctx) {
         CommandSender sender = ctx.getSource().getSender();
 
@@ -72,8 +78,12 @@ public class AdminCommand {
             sender.sendMessage(Colours.parse("<gray>Version: <white>" + plugin.getDescription().getVersion()));
             sender.sendMessage(Colours.parse("<gray>Total Signatures: <white>" + count));
             sender.sendMessage(Colours.parse("<gray>Database: <white>SQLite"));
+
+            int tagCount = plugin.getTagRegistry() != null ? plugin.getTagRegistry().size() : 0;
+            sender.sendMessage(Colours.parse("<gray>Configured Tags: <white>" + tagCount));
+
             sender.sendMessage("");
-            sender.sendMessage(Colours.parse("<gray>Commands: <white>/rename, /lore, /sign"));
+            sender.sendMessage(Colours.parse("<gray>Commands: <white>/rename, /lore, /sign, /tag"));
         });
 
         return 1;
@@ -81,7 +91,7 @@ public class AdminCommand {
 
     private void sendUsage(CommandSender sender) {
         sender.sendMessage(Colours.parse("<yellow>HxItems Admin Commands:"));
-        sender.sendMessage(Colours.parse("<white>/hxitems reload <gray>- Reload configuration"));
+        sender.sendMessage(Colours.parse("<white>/hxitems reload <gray>- Reload configuration + tags"));
         sender.sendMessage(Colours.parse("<white>/hxitems info <gray>- Show plugin information"));
     }
 }
